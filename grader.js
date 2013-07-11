@@ -28,7 +28,7 @@ var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 
 var rest = require('restler');
-var sys = require('sys');
+var sys = require('util');
 var URL_DEFAULT = "http://warm-brook-2155.herokuapp.com";
 var outfile = "part3.json";
 
@@ -41,10 +41,10 @@ var assertFileExists = function(infile) {
     return instr;
 };
 
-var assertUrlExists = function(inUrl){
+/*var assertUrlExists = function(inUrl){
     var instr = inUrl.toString();
     return instr;
-}
+}*/
 
 
 var cheerioHtmlFile = function(htmlfile) {
@@ -62,7 +62,6 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     for(var ii in checks) {
         var present = $(checks[ii]).length > 0;
         out[checks[ii]] = present;
-        //console.log(ii);
     }
     return out;
 };
@@ -94,7 +93,7 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url <url_addr>', 'Url to index.html', clone(assertUrlExists),URL_DEFAULT)
+        .option('-u, --url <url_addr>', 'Url to index.html', URL_DEFAULT)
         .parse(process.argv);
 
     if(program.file != HTMLFILE_DEFAULT){
