@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 /*
-Automatically grade files for the presence of specified HTML tags/attributes.
-Uses commander.js and cheerio. Teaches command line application development
-and basic DOM parsing.
+   Automatically grade files for the presence of specified HTML tags/attributes.
+   Uses commander.js and cheerio. Teaches command line application development
+   and basic DOM parsing.
 
 References:
 
- + cheerio
-   - https://github.com/MatthewMueller/cheerio
-   - http://encosia.com/cheerio-faster-windows-friendly-alternative-jsdom/
-   - http://maxogden.com/scraping-with-node.html
++ cheerio
+- https://github.com/MatthewMueller/cheerio
+- http://encosia.com/cheerio-faster-windows-friendly-alternative-jsdom/
+- http://maxogden.com/scraping-with-node.html
 
- + commander.js
-   - https://github.com/visionmedia/commander.js
-   - http://tjholowaychuk.com/post/9103188408/commander-js-nodejs-command-line-interfaces-made-easy
++ commander.js
+- https://github.com/visionmedia/commander.js
+- http://tjholowaychuk.com/post/9103188408/commander-js-nodejs-command-line-interfaces-made-easy
 
- + JSON
-   - http://en.wikipedia.org/wiki/JSON
-   - https://developer.mozilla.org/en-US/docs/JSON
-   - https://developer.mozilla.org/en-US/docs/JSON#JSON_in_Firefox_2
-*/
++ JSON
+- http://en.wikipedia.org/wiki/JSON
+- https://developer.mozilla.org/en-US/docs/JSON
+- https://developer.mozilla.org/en-US/docs/JSON#JSON_in_Firefox_2
+ */
 
 var fs = require('fs');
 var program = require('commander');
@@ -28,8 +28,8 @@ var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 
 var rest = require('restler');
-var sys = require('util'); 
-var URL_DEFAULT = "https://github.com/jcchen728/bitstarter/blob/master/index.html";
+var sys = require('sys');
+var URL_DEFAULT = "http://obscure-ravine-9648.herokuapp.com";
 var outfile = "part3.json";
 
 var assertFileExists = function(infile) {
@@ -40,6 +40,12 @@ var assertFileExists = function(infile) {
     }
     return instr;
 };
+
+var assertUrlExists = function(inUrl){
+    var instr = inUrl.toString();
+    return instr;
+}
+
 
 var cheerioHtmlFile = function(htmlfile) {
     return cheerio.load(fs.readFileSync(htmlfile));
@@ -56,9 +62,27 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     for(var ii in checks) {
         var present = $(checks[ii]).length > 0;
         out[checks[ii]] = present;
+        //console.log(ii);
     }
     return out;
 };
+
+var checkUrlAddr = function(url,checksfile){    
+    
+    rest.get(url).on('complete',function(result) {
+            var out = {};
+            $ = cheerio.load(result);
+            var checks = loadChecks(checksfile).sort();      
+            for(var ii in checks) {
+           var present = $(checks[ii]).length > 0;
+            out[checks[ii]] = present;
+            }
+           var outJson = JSON.stringify(out, null, 4);
+            console.log(outJson);
+            fs.writeFileSync(outfile, outJson);  
+            });
+
+}
 
 var clone = function(fn) {
     // Workaround for commander.js issue.
@@ -66,36 +90,19 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
-var checkUrlFile = function(url,checksfile){    
-    
-    rest.get(url).on('complete',function(data) {           
-            var out = {};
-            $ = cheerio.load(data);
-            var checks = loadChecks(checksfile).sort();      
-            for(var ii in checks) {
-            var present = $(checks[ii]).length > 0;
-            out[checks[ii]] = present;
-            }
-           var outJson = JSON.stringify(out, null, 4);
-            console.log(outJson);
-            fs.writeFileSync(outfile, outJson);  
-            });
-}
-
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url', 'Url path to html file', URL_DEFAULT)
+        .option('-u, --url <url_addr>', 'Url to index.html', clone(assertUrlExists),URL_DEFAULT)
         .parse(process.argv);
-     
-     if(program.file != HTMLFILE_DEFAULT){
-       var checkJson = checkHtmlFile(program.file, program.checks);
-       var outJson = JSON.stringify(checkJson, null, 4);
-       console.log(outJson);
-     }
-     else 
-      checkUrlFile(program.url, program.checks);
+
+    if(program.file != HTMLFILE_DEFAULT){
+        var checkJson = checkHtmlFile(program.file, program.checks);
+        var outJson = JSON.stringify(checkJson,null,4);
+    }
+    else
+        checkUrlAddr(program.url, program.checks);
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
