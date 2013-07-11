@@ -29,7 +29,7 @@ var CHECKSFILE_DEFAULT = "checks.json";
 
 var rest = require('restler');
 var sys = require('sys');
-var URL_DEFAULT = "http://obscure-ravine-9648.herokuapp.com";
+var URL_DEFAULT = "http://warm-brook-2155.herokuapp.com";
 var outfile = "part3.json";
 
 var assertFileExists = function(infile) {
@@ -70,7 +70,7 @@ var checkHtmlFile = function(htmlfile, checksfile) {
 var checkUrlAddr = function(url,checksfile){    
     
     rest.get(url).on('complete',function(result) {
-            var out = {};
+	var out = {};
             $ = cheerio.load(result);
             var checks = loadChecks(checksfile).sort();      
             for(var ii in checks) {
